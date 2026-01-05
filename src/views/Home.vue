@@ -42,15 +42,16 @@
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
+// 使用 import 导入图片，自动处理路径和打包
+import banner1 from '@/assets/img/banner1.jpg'
+import banner2 from '@/assets/img/banner2.jpg'
+import banner3 from '@/assets/img/banner3.jpg'
 
 const router = useRouter()
 const scenicList = ref([])
 
 // 模拟一些好看的轮播图
-const banners = [
-  'https://img.zcool.cn/community/01a9115e533c39a801216518a28f80.jpg@1280w_1l_2o_100sh.jpg',
-  'https://img.zcool.cn/community/01f06e5d0859cca8012051cd108253.jpg@1280w_1l_2o_100sh.jpg'
-]
+const banners = [banner1, banner2, banner3]
 
 onMounted(() => {
   // 获取景点列表

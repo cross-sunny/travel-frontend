@@ -12,7 +12,8 @@
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="username" label="用户名" />
       <el-table-column prop="nickname" label="昵称" />
-      <el-table-column prop="phone" label="电话/邮箱" />
+      <el-table-column prop="email" label="邮箱" /><!-- width="180" -->
+
       <el-table-column prop="role" label="角色">
         <template #default="scope">
           <el-tag :type="scope.row.role === 'ADMIN' ? 'danger' : 'success'">
