@@ -3,7 +3,7 @@
     <div class="auth-box">
       <div class="auth-header">
         <div class="logo">🌲</div>
-        <h2>欢迎注册搬木民宿</h2>
+        <h2>欢迎注册旅行者</h2>
         <p>开启您的自然之旅</p>
       </div>
 
