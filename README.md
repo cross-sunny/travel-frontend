@@ -20,7 +20,7 @@
 ### 1. 克隆项目
 
 ### 2. 安装依赖
-npm install
+`npm install`
 
 ### 3. 配置后端接口地址
 
@@ -33,7 +33,7 @@ src/utils/request.js
 http://localhost:8080
 
 ### 4. 启动项目
-npm run dev
+`npm run dev`
 
 浏览器访问：
 
