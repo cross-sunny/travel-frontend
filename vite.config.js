@@ -4,6 +4,7 @@ import path from 'path' // 需导入path模块
 
 export default defineConfig({
   plugins: [vue()],
+  base: '/travel/', // 子路径名
   resolve: {
     alias: {
       // 关键：把@映射到项目根目录下的src文件夹

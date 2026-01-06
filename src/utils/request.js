@@ -2,7 +2,8 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
 const request = axios.create({
-    baseURL: 'http://localhost:8080', // 后端地址
+    // 生产环境指向 Nginx 的接口前缀，后面 Nginx 会把这个转发给 8082
+    baseURL: import.meta.env.MODE === 'production' ? '/travel/api' : 'http://localhost:8082',
     timeout: 5000
 })
 
