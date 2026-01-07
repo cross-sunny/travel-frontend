@@ -1,17 +1,47 @@
 <template>
   <div class="home-container">
-    <!-- 1. 巨幕轮播图 -->
-    <el-carousel trigger="click" height="500px">
-      <el-carousel-item v-for="item in banners" :key="item">
-        <img :src="item" style="width: 100%; height: 100%; object-fit: cover;">
-      </el-carousel-item>
-    </el-carousel>
 
-    <!-- 2. 热门景点展示 -->
+    <!-- 1. 升级版：3D卡片式巨幕轮播图 -->
+    <div class="banner-box">
+      <!-- type="card" 开启卡片模式 -->
+      <el-carousel
+          :interval="4000"
+          type="card"
+          height="450px"
+          indicator-position="outside"
+          arrow="always"
+      >
+        <el-carousel-item v-for="(item, index) in displayBanners" :key="index" class="custom-carousel-item">
+          <div class="carousel-card" @click="handleBannerClick(index)">
+            <!-- 图片层 -->
+            <div class="image-layer">
+              <img v-if="item.img" :src="item.img" alt="banner" class="banner-img">
+              <!-- 如果没有图片，显示高级灰色占位 -->
+              <div v-else class="empty-placeholder">
+                <span>虚位以待</span>
+              </div>
+            </div>
+
+            <!-- 遮罩层：非当前激活的图片会变暗，更有层次感 -->
+            <div class="mask-layer"></div>
+
+            <!-- 文字内容：只有中间激活时才清晰显示 -->
+            <div class="text-content">
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.desc }}</p>
+            </div>
+          </div>
+        </el-carousel-item>
+      </el-carousel>
+    </div>
+
+    <!-- 2. 热门景点展示 (白色背景) -->
     <div class="section">
       <div class="section-header">
-        <h2>🔥 热门景点推荐</h2>
-        <!-- 修改点1：添加点击跳转 -->
+        <div class="header-left">
+          <h2>🔥 热门景点推荐</h2>
+          <span class="sub-title">探索未知的自然奇观</span>
+        </div>
         <span class="view-more" @click="$router.push('/scenic')">
           查看更多 <el-icon><ArrowRight /></el-icon>
         </span>
@@ -19,7 +49,7 @@
 
       <el-row :gutter="30">
         <el-col :span="6" v-for="item in scenicList" :key="item.id" style="margin-bottom: 30px;">
-          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail(item.id)">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/scenic', item.id)">
             <div class="image-wrapper">
               <img :src="item.image" class="image">
             </div>
@@ -35,93 +65,323 @@
       </el-row>
     </div>
 
-    <!-- 3. 精选民宿 (可选) -->
+    <!-- 3. 精选民宿 (灰色背景) -->
     <div class="section" style="background-color: #f9f9f9;">
       <div class="section-header">
-        <h2>🏠 精选民宿</h2>
+        <div class="header-left">
+          <h2>🏠 精选民宿推荐</h2>
+          <span class="sub-title">像当地人一样生活</span>
+        </div>
         <span class="view-more" @click="$router.push('/hotel')">
           查看更多 <el-icon><ArrowRight /></el-icon>
         </span>
       </div>
-      <!-- 这里可以加民宿的逻辑，为了简洁略 -->
+
+      <el-row :gutter="30">
+        <el-col :span="6" v-for="item in hotelList" :key="item.id" style="margin-bottom: 30px;">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/hotel', item.id)">
+            <div class="image-wrapper">
+              <img :src="item.image" class="image">
+            </div>
+            <div style="padding: 14px;">
+              <div class="card-title">{{ item.name || item.title }}</div>
+              <div class="card-info">
+                <span class="price">¥{{ item.price }} <span style="font-size: 12px; color: #999; font-weight: normal">/晚</span></span>
+                <span class="city" v-if="item.address"><el-icon><Location /></el-icon> {{ formatAddress(item.address) }}</span>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
+
+    <!-- 4. 特色美食 (白色背景) -->
+    <div class="section">
+      <div class="section-header">
+        <div class="header-left">
+          <h2>🍽️ 特色美食推荐</h2>
+          <span class="sub-title">舌尖上的极致享受</span>
+        </div>
+        <span class="view-more" @click="$router.push('/food')">
+          查看更多 <el-icon><ArrowRight /></el-icon>
+        </span>
+      </div>
+
+      <el-row :gutter="30">
+        <el-col :span="6" v-for="item in foodList" :key="item.id" style="margin-bottom: 30px;">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/food', item.id)">
+            <div class="image-wrapper">
+              <img :src="item.image" class="image">
+            </div>
+            <div style="padding: 14px;">
+              <div class="card-title">{{ item.name || item.title }}</div>
+              <div class="card-info">
+                <span class="price">¥{{ item.price }}</span>
+                <span class="city" style="color: #42b983">推荐指数 ⭐⭐⭐⭐⭐</span>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
-import {ArrowRight, Location} from "@element-plus/icons-vue";
+import { ArrowRight, Location } from "@element-plus/icons-vue";
 
-const router = useRouter()
-const scenicList = ref([])
-
+// 图片资源导入
 import banner1 from '@/assets/img/banner1.jpg';
 import banner2 from '@/assets/img/banner2.jpg';
 import banner3 from '@/assets/img/banner3.jpg';
+import banner4 from '@/assets/img/banner4.png';
+import banner5 from '@/assets/img/banner5.jpg';
+import banner6 from '@/assets/img/banner6.jpg';
 
-const banners = [banner1, banner2, banner3];
+const router = useRouter()
 
-onMounted(() => {
-  // 修改点2：获取数据后随机打乱并截取前8个
-  request.get('/scenic/list').then(res => {
-    if (res && res.length > 0) {
-      // 随机排序算法
-      const shuffled = res.sort(() => 0.5 - Math.random())
-      // 截取前8个
-      scenicList.value = shuffled.slice(0, 8)
+// 原始 Banner 数据（可能只有3个）
+const rawBanners = [
+  { img: banner1, title: '山川湖海', desc: '奔赴一场自然的约会' },
+  { img: banner2, title: '云漫金顶', desc: '登仙山揽胜，赴道家清欢' },
+  { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
+  { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
+  { img: banner5, title: '古坛遗韵', desc: '一砖一瓦皆承华夏文脉' },
+  { img: banner6, title: '烟雨古镇', desc: '踏青石板，赴一场江南梦' }
+];
+
+// 计算属性：智能补全 Banner 到 5 个
+const displayBanners = computed(() => {
+  let list = [...rawBanners];
+  // 如果少于5个，就循环填充，避免空白太丑
+  while (list.length < 6) {
+    // 将现有的推入列表，或者推入空对象占位
+    if(rawBanners.length > 0) {
+      list.push(rawBanners[list.length % rawBanners.length])
+    } else {
+      // 极端情况：如果原图一个都没有，推入空对象，UI会显示灰色占位
+      list.push({ img: '', title: '敬请期待', desc: '即将上线' })
     }
-  })
+  }
+  // 截取前5个，保证轮播结构稳定
+  return list.slice(0, 6);
 })
 
-const goDetail = (id) => {
-  router.push('/scenic/' + id)
+// 数据定义
+const scenicList = ref([])
+const hotelList = ref([])
+const foodList = ref([])
+
+onMounted(() => {
+  loadData('/scenic/list', scenicList)
+  loadData('/hotel/list', hotelList)
+  loadData('/food/list', foodList)
+})
+
+// 通用加载+随机排序逻辑
+const loadData = (url, targetRef) => {
+  request.get(url).then(res => {
+    if (res && res.length > 0) {
+      const shuffled = res.sort(() => 0.5 - Math.random())
+      targetRef.value = shuffled.slice(0, 4)
+    }
+  })
+}
+
+const goDetail = (pathPrefix, id) => {
+  router.push(pathPrefix + '/' + id)
+}
+
+const handleBannerClick = (index) => {
+  console.log("Clicked banner index:", index)
+  // 可以根据index跳转不同路由
+  router.push('/scenic')
+}
+
+// 地址格式化
+const formatAddress = (addr) => {
+  if (!addr) return ''
+  return addr.length > 8 ? addr.substring(0, 8) + '...' : addr
 }
 </script>
 
 <style scoped>
+/* ============= 1. 高级 3D 轮播图样式 ============= */
+.banner-box {
+  padding-top: 20px;
+  background: linear-gradient(to bottom, #fff 80%, #f9f9f9 100%); /* 底部微渐变衔接 */
+  margin-bottom: 20px;
+}
+
+.custom-carousel-item {
+  border-radius: 12px;
+  /* 解决 Safari 圆角溢出问题 */
+  overflow: hidden;
+}
+
+.carousel-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* 默认阴影 */
+  transition: all 0.4s ease-in-out;
+}
+
+.image-layer {
+  width: 100%;
+  height: 100%;
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease; /* 图片缩放动画 */
+}
+
+/* 无图时的占位样式 */
+.empty-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #e0e5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+/* 遮罩层：默认覆盖黑色半透明，制造景深 */
+.mask-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* 默认变暗 */
+  transition: background 0.4s ease;
+  z-index: 1;
+}
+
+/* 文字层：默认隐藏或透明 */
+.text-content {
+  position: absolute;
+  bottom: 40px;
+  left: 30px;
+  z-index: 2;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+
+.text-content h3 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.text-content p {
+  font-size: 16px;
+  background: rgba(0,0,0,0.3);
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  backdrop-filter: blur(4px);
+}
+
+/* >>>>>>> 核心魔法：Element Plus 的 is-active 类 <<<<<<< */
+/* 当卡片处于中间激活状态时 */
+.el-carousel__item.is-active .mask-layer {
+  background: rgba(0, 0, 0, 0); /* 激活时去掉遮罩，变亮 */
+}
+
+.el-carousel__item.is-active .text-content {
+  opacity: 1; /* 显示文字 */
+  transform: translateY(0);
+}
+
+.el-carousel__item.is-active .banner-img {
+  transform: scale(1.05); /* 激活时图片微放大 */
+}
+
+.el-carousel__item.is-active .carousel-card {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); /* 激活时阴影加重，浮起感 */
+}
+
+/* ============= 通用板块样式 ============= */
 .section {
   padding: 40px 10%;
 }
+
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end; /* 底部对齐 */
   margin-bottom: 30px;
 }
-.view-more {
+
+.header-left h2 {
+  font-size: 26px;
+  color: #333;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.sub-title {
+  font-size: 14px;
   color: #999;
+}
+
+.view-more {
+  color: #666;
   cursor: pointer;
   display: flex;
   align-items: center;
   transition: color 0.3s;
+  font-size: 14px;
 }
+
 .view-more:hover {
   color: #42b983;
 }
 
+/* ============= 卡片样式 ============= */
 .product-card {
   transition: all 0.3s;
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
+  border: none;
 }
+
 .product-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
 .image-wrapper {
   height: 200px;
   overflow: hidden;
+  position: relative;
 }
+
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s;
 }
+
 .product-card:hover .image {
   transform: scale(1.1);
 }
@@ -133,19 +393,25 @@ const goDetail = (id) => {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color: #333;
 }
+
 .card-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .price {
   color: #ff6600;
   font-size: 18px;
   font-weight: bold;
 }
+
 .city {
   color: #999;
   font-size: 12px;
+  display: flex;
+  align-items: center;
 }
 </style>
