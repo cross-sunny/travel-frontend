@@ -1,9 +1,8 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <!-- 侧边栏：深色风格 -->
+      <!-- 侧边栏 -->
       <el-aside width="200px" style="background-color: #304156; min-height: 100vh;">
-        <!-- 改名点 1 -->
         <div style="height: 60px; line-height: 60px; text-align: center; color: white; font-weight: bold; font-size: 20px; border-bottom: 1px solid #455a6e;">
           旅行者后台管理
         </div>
@@ -27,17 +26,14 @@
             <el-icon><MapLocation /></el-icon>
             <span>景点管理</span>
           </el-menu-item>
-
-          <!-- 此前缺失的两个菜单，现在加上 -->
           <el-menu-item index="/admin/hotel">
             <el-icon><OfficeBuilding /></el-icon>
             <span>民宿管理</span>
           </el-menu-item>
           <el-menu-item index="/admin/food">
-            <el-icon><Dish /></el-icon> <!-- 需要 Element Plus 图标支持 -->
+            <el-icon><Dish /></el-icon>
             <span>美食管理</span>
           </el-menu-item>
-
           <el-menu-item index="/admin/order">
             <el-icon><List /></el-icon>
             <span>订单管理</span>
@@ -46,19 +42,28 @@
       </el-aside>
 
       <el-container>
-        <!-- 头部 -->
+        <!-- 头部 (修改区域) -->
         <el-header style="border-bottom: 1px solid #ccc; display: flex; align-items: center; justify-content: space-between; background: #fff;">
           <div style="font-size: 14px; color: #666;">欢迎进入旅行者管理系统</div>
-          <el-dropdown>
-            <span class="el-dropdown-link" style="cursor: pointer; display: flex; align-items: center;">
-              管理员 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+
+          <!-- 右侧操作区 -->
+          <div style="display: flex; align-items: center;">
+            <!-- 新增：回到前台按钮 -->
+            <el-button type="primary" link icon="HomeFilled" @click="$router.push('/')" style="margin-right: 20px;">
+              回到前台首页
+            </el-button>
+
+            <el-dropdown>
+              <span class="el-dropdown-link" style="cursor: pointer; display: flex; align-items: center;">
+                管理员 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </el-header>
 
         <!-- 主体内容 -->
@@ -74,7 +79,8 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import {ArrowDown, Dish, List, MapLocation, Odometer, OfficeBuilding, User} from "@element-plus/icons-vue";
+import { HomeFilled } from '@element-plus/icons-vue' // 引入图标
+
 const router = useRouter()
 
 const logout = () => {
