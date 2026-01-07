@@ -1,10 +1,13 @@
 <template>
   <div class="auth-wrapper">
+    <div class="auth-overlay"></div>
     <div class="auth-box">
       <div class="auth-header">
-        <div class="logo">🌲</div>
-        <h2>欢迎注册旅行者</h2>
-        <p>开启您的自然之旅</p>
+        <div class="logo-container">
+          <div class="logo">🌲</div>
+        </div>
+        <h2>Traveler</h2>
+        <p>开启您的自然探索之旅</p>
       </div>
 
       <!-- autocomplete="off" 禁止表单缓存 -->
@@ -14,6 +17,7 @@
           ref="formRef"
           size="large"
           autocomplete="off"
+          class="custom-form"
       >
         <!-- 隐藏 input 欺骗浏览器自动填充 -->
         <input type="text" style="display:none" />
@@ -23,7 +27,7 @@
         <el-form-item prop="username">
           <el-input
               v-model="form.username"
-              placeholder="设置账号 (登录使用)"
+              placeholder="账号 (登录使用)"
               :prefix-icon="User"
               autocomplete="off"
               name="new-username-field"
@@ -34,7 +38,7 @@
         <el-form-item prop="nickname">
           <el-input
               v-model="form.nickname"
-              placeholder="您的昵称 (如: 旅行者)"
+              placeholder="昵称"
               :prefix-icon="Avatar"
               autocomplete="off"
           />
@@ -44,31 +48,32 @@
         <el-form-item prop="email">
           <el-input
               v-model="form.email"
-              placeholder="请输入您的邮箱"
+              placeholder="电子邮箱"
               :prefix-icon="Message"
               autocomplete="off"
               name="new-email-field"
           />
         </el-form-item>
 
-        <!-- 验证码（改为6位） -->
+        <!-- 验证码 -->
         <el-form-item prop="code">
           <div class="code-flex">
+            <!-- flex: 1 会自动填满除去按钮之外的剩余空间 -->
             <el-input
                 v-model="form.code"
                 placeholder="6位验证码"
                 :prefix-icon="Key"
-                style="flex: 1; margin-right: 10px;"
+                class="code-input"
                 maxlength="6"
                 @input="form.code = form.code.replace(/\D/g, '')"
             />
+            <!-- 按钮文字变长，宽度自动撑开 -->
             <el-button
-                type="success"
-                plain
+                class="code-btn"
                 :disabled="time > 0 || emailLoading"
                 @click="handleSendCode"
             >
-              {{ time > 0 ? `${time}秒后重发` : '获取验证码' }}
+              {{ time > 0 ? `${time}s` : '获取验证码' }}
             </el-button>
           </div>
         </el-form-item>
@@ -88,7 +93,7 @@
         </el-form-item>
 
         <el-button type="primary" class="full-btn" @click="handleRegister" :loading="submitLoading">
-          立 即 注 册
+          注册
         </el-button>
 
         <div class="form-footer">
@@ -121,7 +126,7 @@ const form = reactive({
   password: ''
 })
 
-// 校验规则（增强验证码校验）
+// 校验规则
 const rules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
@@ -157,13 +162,11 @@ const handleSendCode = () => {
         .post('/user/send-code', null, { params: { email: form.email } })
         .then(() => {
           ElMessage.success(`验证码已发送至 ${form.email}`)
-          // 自动聚焦验证码框（可选）
           setTimeout(() => {
             const codeInput = document.querySelector('.code-flex input')
             if (codeInput) codeInput.focus()
           }, 100)
 
-          // 倒计时60秒
           time.value = 60
           timer.value = setInterval(() => {
             time.value--
@@ -182,7 +185,7 @@ const handleSendCode = () => {
   })
 }
 
-// 提交注册
+// 注册
 const handleRegister = () => {
   formRef.value.validate((valid) => {
     if (valid) {
@@ -190,7 +193,7 @@ const handleRegister = () => {
       request
           .post('/user/register-email', form)
           .then(() => {
-            ElMessage.success('注册成功！')
+            ElMessage.success('欢迎加入旅行者！')
             router.push('/login')
           })
           .catch((err) => {
@@ -203,7 +206,6 @@ const handleRegister = () => {
   })
 }
 
-// 清理定时器
 onUnmounted(() => {
   if (timer.value) {
     clearInterval(timer.value)
@@ -213,74 +215,189 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 容器设置 */
 .auth-wrapper {
   min-height: 100vh;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('https://img.zcool.cn/community/01f06e5d0859cca8012051cd108253.jpg@1280w_1l_2o_100sh.jpg') no-repeat center center;
+  background: url('https://sns-webpic-qc.xhscdn.com/202601070958/5d3952a78879260f7963eba9d0492281/spectrum/1040g34o317v8kc850o005oeqtctk1ko0iinlbeo!nc_n_webp_mw_1') no-repeat center center;
   background-size: cover;
+  position: relative;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
 }
 
+.auth-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  z-index: 0;
+}
+
+/* 毛玻璃注册框 - 紧凑透明版 */
 .auth-box {
-  width: 420px;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.95);
+  position: relative;
+  z-index: 1;
+  width: 380px;
+  padding: 30px 35px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1),
+  inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  transition: transform 0.3s ease;
 }
 
+/* 头部样式 */
 .auth-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+.logo-container {
+  width: 56px; /* 保持容器较小 */
+  height: 56px;
+  background: linear-gradient(135deg, #e0f2e9 0%, #ffffff 100%);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
 .auth-header .logo {
-  font-size: 48px;
-  margin-bottom: 10px;
+  font-size: 40px;
+  line-height: 1;
+  margin-top: -2px;
 }
 
 .auth-header h2 {
-  color: #333;
+  color: #2c3e50;
   margin: 0;
   font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .auth-header p {
-  color: #666;
+  color: #4a5a54;
   margin: 5px 0 0;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 1px;
 }
 
+/* 压缩表单项间距 */
+:deep(.el-form-item) {
+  margin-bottom: 16px;
+}
+
+/* 验证码布局 - Flexbox 自动控制宽度 */
 .code-flex {
   display: flex;
   width: 100%;
+  gap: 10px;
 }
 
+.code-input {
+  flex: 1; /* 关键：自动占据剩余空间，所以按钮变宽时它会自动变短 */
+}
+
+/* 输入框样式调整 */
+:deep(.el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 40px;
+}
+
+:deep(.el-input__wrapper:hover),
+:deep(.el-input__wrapper.is-focus) {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #2e7d32 !important;
+  box-shadow: 0 0 0 1px rgba(46, 125, 50, 0.2) !important;
+}
+
+/* 验证码按钮 */
+.code-btn {
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #4caf50;
+  color: #4caf50;
+  background: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  padding: 0 15px; /* 保持适当内边距，内容变多时会自动撑开 */
+  white-space: nowrap; /* 防止文字换行 */
+}
+.code-btn:hover {
+  background: #4caf50;
+  color: #fff;
+}
+.code-btn:disabled {
+  border-color: #ccc;
+  color: #999;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 注册大按钮 */
 .full-btn {
   width: 100%;
-  margin-top: 10px;
-  height: 44px;
-  font-size: 16px;
-  background-color: #42b983;
-  border-color: #42b983;
-}
-.full-btn:hover {
-  background-color: #3aa876;
-  border-color: #3aa876;
+  margin-top: 5px;
+  height: 42px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.25);
+  transition: all 0.3s ease;
 }
 
+.full-btn:hover {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.35);
+}
+.full-btn:active {
+  transform: translateY(0);
+}
+
+/* 底部链接 */
 .form-footer {
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-  color: #666;
+  margin-top: 15px;
+  font-size: 13px;
+  color: #4a5a54;
 }
 
 .link {
-  color: #42b983;
+  color: #2e7d32;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
+  margin-left: 5px;
+  transition: all 0.2s;
+}
+
+.link:hover {
+  color: #1b5e20;
+  text-decoration: underline;
+}
+
+/* 响应式适配 */
+@media (max-width: 480px) {
+  .auth-box {
+    width: 85%;
+    padding: 25px 20px;
+  }
 }
 </style>
