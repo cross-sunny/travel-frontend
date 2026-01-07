@@ -1,21 +1,30 @@
 <template>
   <div class="user-center-container">
     <el-row :gutter="20">
+      <!-- 左侧：个人信息卡片 -->
       <el-col :span="8">
         <el-card class="user-card">
+
+          <!-- 1. 头像区域 -->
           <div class="avatar-container" @click="openAvatarEdit">
             <el-avatar :size="100" :src="getFullUrl(userInfo.avatar)" />
             <div class="edit-avatar">更换头像</div>
           </div>
 
-          <h2 style="margin: 10px 0;">{{ userInfo.nickname || userInfo.username }}</h2>
-          <el-tag :type="userInfo.role === 'ADMIN' ? 'danger' : 'success'">
-            {{ userInfo.role === 'ADMIN' ? '管理员' : '普通用户' }}
-          </el-tag>
+          <!-- 2. 昵称与角色 (强制居中) -->
+          <div class="info-header">
+            <h2 class="user-nickname">{{ userInfo.nickname || userInfo.username }}</h2>
+            <div class="role-tag-wrapper">
+              <el-tag :type="userInfo.role === 'ADMIN' ? 'danger' : 'success'" effect="light" round>
+                {{ userInfo.role === 'ADMIN' ? '管理员' : '普通用户' }}
+              </el-tag>
+            </div>
+          </div>
 
-          <el-divider />
+          <el-divider class="custom-divider" />
 
-          <el-form label-width="60px" style="text-align: left;">
+          <!-- 3. 表单区域 (宽度与按钮统一) -->
+          <el-form class="user-form" label-width="50px" label-position="left">
             <el-form-item label="账号">
               <el-input v-model="userInfo.username" disabled />
             </el-form-item>
@@ -27,14 +36,15 @@
             </el-form-item>
           </el-form>
 
-          <!-- 按钮组：强制固定宽度+居中 -->
+          <!-- 4. 按钮组 (宽度与表单统一) -->
           <div class="button-group">
-            <el-button type="primary" @click="updateInfo">保存修改</el-button>
-            <el-button type="danger" plain @click="deleteAccount">注销账号</el-button>
+            <el-button type="primary" class="action-btn" @click="updateInfo">保存修改</el-button>
+            <el-button type="danger" plain class="action-btn" @click="deleteAccount">注销账号</el-button>
           </div>
         </el-card>
       </el-col>
 
+      <!-- 右侧：我的订单 (保持不变) -->
       <el-col :span="16">
         <el-card>
           <template #header>
@@ -73,6 +83,7 @@
       </el-col>
     </el-row>
 
+    <!-- 头像上传弹窗 -->
     <el-dialog v-model="avatarDialogVisible" title="更换头像" width="400px" align="center">
       <div class="upload-container">
         <div class="dialog-avatar-wrap" @click="triggerUpload">
@@ -83,6 +94,7 @@
           <img v-if="newAvatarUrl" :src="getFullUrl(newAvatarUrl)" class="dialog-avatar" />
           <img v-else :src="getFullUrl(userInfo.avatar)" class="dialog-avatar" />
         </div>
+        <!-- 隐藏的upload组件，通过ref触发 -->
         <el-upload
             ref="uploadRef"
             class="hidden-upload"
@@ -97,7 +109,7 @@
       </div>
 
       <p style="font-size: 12px; color: #999; margin-top: 10px; text-align: center;">
-        点击上方图片上传本地文件 (支持 JPG/PNG，小于10MB)
+        点击上方图片上传本地文件 (支持 JPG/PNG，小于2MB)
       </p>
 
       <template #footer>
@@ -120,20 +132,21 @@ const userInfo = ref({})
 const editForm = reactive({ nickname: '', email: '' })
 const orders = ref([])
 const loading = ref(false)
-const uploadRef = ref(null)
 
+// 头像相关变量
 const avatarDialogVisible = ref(false)
 const newAvatarUrl = ref('')
 const isAvatarUploading = ref(false)
+const uploadRef = ref(null)
 
+// 1. 定义服务器地址
 const REMOTE_SERVER = 'http://115.175.42.16'
 const uploadUrl = `${REMOTE_SERVER}/travel/api/file/upload`
+
 const getFullUrl = (url) => {
   if (!url) return 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
   if (url.startsWith('http')) return url
-  if (url.startsWith('/files')) {
-    return `${REMOTE_SERVER}${url}`
-  }
+  if (url.startsWith('/files')) return `${REMOTE_SERVER}${url}`
   return url
 }
 
@@ -147,10 +160,6 @@ onMounted(() => {
   } else {
     router.push('/login')
   }
-})
-
-const computedAvatar = computed(() => {
-  return getFullUrl(userInfo.value.avatar)
 })
 
 const loadOrders = () => {
@@ -178,24 +187,25 @@ const openAvatarEdit = () => {
   avatarDialogVisible.value = true
 }
 
+// 触发隐藏的文件选择框
 const triggerUpload = () => {
-  uploadRef.value.$el.querySelector('input[type="file"]').click()
-}
-
-const handleUploadProgress = () => {
-  isAvatarUploading.value = true
+  // 核心：模拟点击 el-upload 内部的 input
+  uploadRef.value.$el.querySelector('input').click()
 }
 
 const beforeAvatarUpload = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
     ElMessage.error('头像只能是 JPG 或 PNG 格式!')
     return false
-  } else if (rawFile.size / 1024 / 1024 > 10) {
-    ElMessage.error('图片大小不能超过 10MB!')
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('图片大小不能超过 2MB!')
     return false
   }
-  isAvatarUploading.value = true
   return true
+}
+
+const handleUploadProgress = () => {
+  isAvatarUploading.value = true
 }
 
 const handleAvatarSuccess = (response, uploadFile) => {
@@ -211,7 +221,7 @@ const handleAvatarSuccess = (response, uploadFile) => {
 const handleAvatarError = (err) => {
   isAvatarUploading.value = false
   console.error('上传报错:', err)
-  ElMessage.error('上传请求失败，请检查网络或文件大小')
+  ElMessage.error('上传请求失败，请检查网络')
 }
 
 const saveAvatar = () => {
@@ -248,125 +258,107 @@ const deleteAccount = () => {
 </script>
 
 <style scoped>
-.user-center-container {
-  width: 1200px;
-  margin: 40px auto;
-}
+/* 左侧卡片布局 */
 .user-card {
-  text-align: center;
-  position: relative;
-  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 确保所有子元素水平居中 */
+  padding: 40px 20px;
+  min-height: 520px;
 }
 
+/* 1. 头像区域 (确保无偏移) */
 .avatar-container {
   position: relative;
   width: 100px;
   height: 100px;
-  margin: 0 auto 20px;
+  margin: 0 auto 20px; /* margin: 0 auto 是块级元素居中的关键 */
   cursor: pointer;
+  display: flex;       /* 增加 Flex 确保图片在容器内也居中 */
+  justify-content: center;
+  align-items: center;
 }
 .edit-avatar {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  color: white;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); color: white;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.3s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; opacity: 0; transition: opacity 0.3s;
 }
-.avatar-container:hover .edit-avatar {
-  opacity: 1;
-}
+.avatar-container:hover .edit-avatar { opacity: 1; }
 
-.button-group {
-  margin: 24px auto 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  width: 200px;
+/* 2. 昵称与标签 */
+.info-header {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 5px;
 }
-
-.button-group .el-button {
-  width: 200px !important;
-  padding: 8px 0;
-  font-size: 14px;
+.user-nickname {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: #303133;
 }
-.user-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.upload-container {
+.role-tag-wrapper {
   display: flex;
   justify-content: center;
+}
+
+/* 3. 分割线 (核心修改) */
+.custom-divider {
+  margin: 25px 0;
+  /* 修改宽度为 260px，与下面的表单(.user-form)宽度严格一致 */
+  width: 260px !important;
+  /* 确保分割线本身也是居中的 */
+  align-self: center;
+}
+
+/* 4. 表单样式 (宽度基准) */
+.user-form {
+  width: 260px; /* 设定固定宽度 */
   margin-bottom: 10px;
 }
-.dialog-avatar-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  cursor: pointer;
-  overflow: hidden;
-}
-.dialog-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.dialog-upload-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 24px;
-  background: rgba(0,0,0,0.4);
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.dialog-avatar-wrap:hover .dialog-upload-icon {
-  opacity: 1;
-}
-.blue-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.8);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-.loading-icon {
-  color: var(--el-color-primary);
-  font-size: 28px;
-  animation: rotate 1.5s linear infinite;
-}
-.hidden-upload {
-  display: none;
+/* 强制输入框样式 */
+:deep(.el-input__wrapper) {
+  border-radius: 20px;
 }
 
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* 5. 按钮组样式 (宽度基准) */
+.button-group {
+  width: 260px; /* 与表单同宽 */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
+
+.action-btn {
+  width: 100% !important;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 15px;
+  margin-left: 0 !important;
+}
+
+/* --- 弹窗相关样式 --- */
+.upload-container {
+  display: flex; justify-content: center; margin-bottom: 10px;
+}
+.dialog-avatar-wrap {
+  position: relative; width: 120px; height: 120px; border-radius: 50%; cursor: pointer; overflow: hidden; border: 1px solid #eee;
+}
+.dialog-avatar { width: 100%; height: 100%; object-fit: cover; }
+.dialog-upload-icon {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.05); color: #666; display: flex; align-items: center; justify-content: center; font-size: 28px;
+  transition: all 0.3s;
+}
+.dialog-avatar-wrap:hover .dialog-upload-icon { background: rgba(0,0,0,0.3); color: white; }
+.blue-loading {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.loading-icon { color: #409EFF; font-size: 28px; animation: rotate 1.5s linear infinite; }
+.hidden-upload { display: none; }
+
+@keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>

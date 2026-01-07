@@ -73,7 +73,7 @@
       <div class="footer-content">
         <p>© 2026 旅行者 - 让心灵去旅行</p>
         <p style="font-size: 12px; color: #999; margin-top: 5px;">
-          毕业设计演示项目 | 技术栈：Vue3 + SpringBoot + ElementPlus
+          实训演示项目 | 技术栈：Vue3 + SpringBoot + ElementPlus
         </p>
       </div>
     </div>
