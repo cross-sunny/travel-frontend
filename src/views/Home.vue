@@ -1,31 +1,13 @@
 <template>
   <div class="home-container">
 
-    <!-- 1. 升级版：3D卡片式巨幕轮播图 -->
+    <!-- 1. 3D轮播图 (保持不变) -->
     <div class="banner-box">
-      <!-- type="card" 开启卡片模式 -->
-      <el-carousel
-          :interval="4000"
-          type="card"
-          height="450px"
-          indicator-position="outside"
-          arrow="always"
-      >
+      <el-carousel :interval="4000" type="card" height="450px" indicator-position="outside" arrow="always">
         <el-carousel-item v-for="(item, index) in displayBanners" :key="index" class="custom-carousel-item">
           <div class="carousel-card" @click="handleBannerClick(index)">
-            <!-- 图片层 -->
-            <div class="image-layer">
-              <img v-if="item.img" :src="item.img" alt="banner" class="banner-img">
-              <!-- 如果没有图片，显示高级灰色占位 -->
-              <div v-else class="empty-placeholder">
-                <span>虚位以待</span>
-              </div>
-            </div>
-
-            <!-- 遮罩层：非当前激活的图片会变暗，更有层次感 -->
+            <div class="image-layer"><img :src="item.img" class="banner-img"></div>
             <div class="mask-layer"></div>
-
-            <!-- 文字内容：只有中间激活时才清晰显示 -->
             <div class="text-content">
               <h3>{{ item.title }}</h3>
               <p>{{ item.desc }}</p>
@@ -35,7 +17,7 @@
       </el-carousel>
     </div>
 
-    <!-- 2. 热门景点展示 (白色背景) -->
+    <!-- 2. 热门景点 (scenicList) -->
     <div class="section">
       <div class="section-header">
         <div class="header-left">
@@ -46,17 +28,16 @@
           查看更多 <el-icon><ArrowRight /></el-icon>
         </span>
       </div>
-
       <el-row :gutter="30">
         <el-col :span="6" v-for="item in scenicList" :key="item.id" style="margin-bottom: 30px;">
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/scenic', item.id)">
-            <div class="image-wrapper">
-              <img :src="item.image" class="image">
-            </div>
+            <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
+              <!-- 统一使用 title 字段 -->
               <div class="card-title">{{ item.title }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }}</span>
+                <!-- 景点使用 city 字段 -->
                 <span class="city"><el-icon><Location /></el-icon> {{ item.city }}</span>
               </div>
             </div>
@@ -65,7 +46,7 @@
       </el-row>
     </div>
 
-    <!-- 3. 精选民宿 (灰色背景) -->
+    <!-- 3. 精选民宿 (hotelList) -->
     <div class="section" style="background-color: #f9f9f9;">
       <div class="section-header">
         <div class="header-left">
@@ -76,18 +57,17 @@
           查看更多 <el-icon><ArrowRight /></el-icon>
         </span>
       </div>
-
       <el-row :gutter="30">
         <el-col :span="6" v-for="item in hotelList" :key="item.id" style="margin-bottom: 30px;">
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/hotel', item.id)">
-            <div class="image-wrapper">
-              <img :src="item.image" class="image">
-            </div>
+            <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.name || item.title }}</div>
+              <!-- 后端映射 name -> title -->
+              <div class="card-title">{{ item.title }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }} <span style="font-size: 12px; color: #999; font-weight: normal">/晚</span></span>
-                <span class="city" v-if="item.address"><el-icon><Location /></el-icon> {{ formatAddress(item.address) }}</span>
+                <!-- 后端映射 address -> tag -->
+                <span class="city"><el-icon><Location /></el-icon> {{ formatAddress(item.tag) }}</span>
               </div>
             </div>
           </el-card>
@@ -95,7 +75,7 @@
       </el-row>
     </div>
 
-    <!-- 4. 特色美食 (白色背景) -->
+    <!-- 4. 特色美食 (foodList) -->
     <div class="section">
       <div class="section-header">
         <div class="header-left">
@@ -106,15 +86,12 @@
           查看更多 <el-icon><ArrowRight /></el-icon>
         </span>
       </div>
-
       <el-row :gutter="30">
         <el-col :span="6" v-for="item in foodList" :key="item.id" style="margin-bottom: 30px;">
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/food', item.id)">
-            <div class="image-wrapper">
-              <img :src="item.image" class="image">
-            </div>
+            <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.name || item.title }}</div>
+              <div class="card-title">{{ item.title }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }}</span>
                 <span class="city" style="color: #42b983">推荐指数 ⭐⭐⭐⭐⭐</span>
@@ -134,7 +111,6 @@ import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { ArrowRight, Location } from "@element-plus/icons-vue";
 
-// 图片资源导入
 import banner1 from '@/assets/img/banner1.jpg';
 import banner2 from '@/assets/img/banner2.jpg';
 import banner3 from '@/assets/img/banner3.jpg';
@@ -143,70 +119,49 @@ import banner5 from '@/assets/img/banner5.jpg';
 import banner6 from '@/assets/img/banner6.jpg';
 
 const router = useRouter()
+const scenicList = ref([])
+const hotelList = ref([])
+const foodList = ref([])
 
-// 原始 Banner 数据（可能只有3个）
 const rawBanners = [
   { img: banner1, title: '山川湖海', desc: '奔赴一场自然的约会' },
   { img: banner2, title: '云漫金顶', desc: '登仙山揽胜，赴道家清欢' },
   { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
   { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
-  { img: banner5, title: '古坛遗韵', desc: '一砖一瓦皆承华夏文脉' },
-  { img: banner6, title: '烟雨古镇', desc: '踏青石板，赴一场江南梦' }
-];
+  { img: banner5, title: '古坛风韵', desc: '一砖一瓦皆承华夏文脉' },
+  { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' }
+]
 
-// 计算属性：智能补全 Banner 到 5 个
 const displayBanners = computed(() => {
-  let list = [...rawBanners];
-  // 如果少于5个，就循环填充，避免空白太丑
-  while (list.length < 6) {
-    // 将现有的推入列表，或者推入空对象占位
-    if(rawBanners.length > 0) {
-      list.push(rawBanners[list.length % rawBanners.length])
-    } else {
-      // 极端情况：如果原图一个都没有，推入空对象，UI会显示灰色占位
-      list.push({ img: '', title: '敬请期待', desc: '即将上线' })
-    }
-  }
-  // 截取前5个，保证轮播结构稳定
-  return list.slice(0, 6);
+  if (rawBanners.length < 3) return [...rawBanners, ...rawBanners, ...rawBanners].slice(0, 6)
+  return rawBanners
 })
-
-// 数据定义
-const scenicList = ref([])
-const hotelList = ref([])
-const foodList = ref([])
 
 onMounted(() => {
-  loadData('/scenic/list', scenicList)
-  loadData('/hotel/list', hotelList)
-  loadData('/food/list', foodList)
+  const userStr = localStorage.getItem('user')
+  let userId = null
+  if (userStr) try { userId = JSON.parse(userStr).id } catch (e) {}
+
+  // 分别加载三个模块的推荐数据
+  loadRecommend('SCENIC', userId, scenicList)
+  loadRecommend('HOTEL', userId, hotelList)
+  loadRecommend('FOOD', userId, foodList)
 })
 
-// 通用加载+随机排序逻辑
-const loadData = (url, targetRef) => {
-  request.get(url).then(res => {
+// 统一调用后端推荐接口
+const loadRecommend = (type, userId, targetRef) => {
+  request.get('/recommend/list', {
+    params: { type: type, userId: userId }
+  }).then(res => {
     if (res && res.length > 0) {
-      const shuffled = res.sort(() => 0.5 - Math.random())
-      targetRef.value = shuffled.slice(0, 4)
+      targetRef.value = res
     }
   })
 }
 
-const goDetail = (pathPrefix, id) => {
-  router.push(pathPrefix + '/' + id)
-}
-
-const handleBannerClick = (index) => {
-  console.log("Clicked banner index:", index)
-  // 可以根据index跳转不同路由
-  router.push('/scenic')
-}
-
-// 地址格式化
-const formatAddress = (addr) => {
-  if (!addr) return ''
-  return addr.length > 8 ? addr.substring(0, 8) + '...' : addr
-}
+const goDetail = (pathPrefix, id) => router.push(pathPrefix + '/' + id)
+const handleBannerClick = (index) => router.push('/scenic')
+const formatAddress = (addr) => addr ? (addr.length > 8 ? addr.substring(0, 8) + '...' : addr) : ''
 </script>
 
 <style scoped>
