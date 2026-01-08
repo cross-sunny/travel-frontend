@@ -1,7 +1,7 @@
 <template>
   <div class="home-container">
 
-    <!-- 1. 3D轮播图 (保持不变) -->
+    <!-- 1. 3D轮播图 -->
     <div class="banner-box">
       <el-carousel :interval="4000" type="card" height="450px" indicator-position="outside" arrow="always">
         <el-carousel-item v-for="(item, index) in displayBanners" :key="index" class="custom-carousel-item">
@@ -17,7 +17,7 @@
       </el-carousel>
     </div>
 
-    <!-- 2. 热门景点 (scenicList) -->
+    <!-- 2. 热门景点 -->
     <div class="section">
       <div class="section-header">
         <div class="header-left">
@@ -33,11 +33,9 @@
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/scenic', item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <!-- 统一使用 title 字段 -->
               <div class="card-title">{{ item.title }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }}</span>
-                <!-- 景点使用 city 字段 -->
                 <span class="city"><el-icon><Location /></el-icon> {{ item.city }}</span>
               </div>
             </div>
@@ -46,7 +44,7 @@
       </el-row>
     </div>
 
-    <!-- 3. 精选民宿 (hotelList) -->
+    <!-- 3. 精选民宿 -->
     <div class="section" style="background-color: #f9f9f9;">
       <div class="section-header">
         <div class="header-left">
@@ -62,12 +60,10 @@
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/hotel', item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <!-- 后端映射 name -> title -->
-              <div class="card-title">{{ item.title }}</div>
+              <div class="card-title">{{ item.name }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }} <span style="font-size: 12px; color: #999; font-weight: normal">/晚</span></span>
-                <!-- 后端映射 address -> tag -->
-                <span class="city"><el-icon><Location /></el-icon> {{ formatAddress(item.tag) }}</span>
+                <span class="city"><el-icon><Location /></el-icon> {{ formatAddress(item.address) }}</span>
               </div>
             </div>
           </el-card>
@@ -75,7 +71,7 @@
       </el-row>
     </div>
 
-    <!-- 4. 特色美食 (foodList) -->
+    <!-- 4. 特色美食 -->
     <div class="section">
       <div class="section-header">
         <div class="header-left">
@@ -91,7 +87,7 @@
           <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/food', item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.title }}</div>
+              <div class="card-title">{{ item.name }}</div>
               <div class="card-info">
                 <span class="price">¥{{ item.price }}</span>
                 <span class="city" style="color: #42b983">推荐指数 ⭐⭐⭐⭐⭐</span>
@@ -128,8 +124,8 @@ const rawBanners = [
   { img: banner2, title: '云漫金顶', desc: '登仙山揽胜，赴道家清欢' },
   { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
   { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
-  { img: banner5, title: '古坛风韵', desc: '一砖一瓦皆承华夏文脉' },
-  { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' }
+  { img: banner5, title: '古坛遗韵', desc: '一砖一瓦皆承华夏文脉' },
+  { img: banner6, title: '烟雨古镇', desc: '踏青石板，赴一场江南梦' }
 ]
 
 const displayBanners = computed(() => {
@@ -138,28 +134,23 @@ const displayBanners = computed(() => {
 })
 
 onMounted(() => {
-  const userStr = localStorage.getItem('user')
-  let userId = null
-  if (userStr) try { userId = JSON.parse(userStr).id } catch (e) {}
-
-  // 分别加载三个模块的推荐数据
-  loadRecommend('SCENIC', userId, scenicList)
-  loadRecommend('HOTEL', userId, hotelList)
-  loadRecommend('FOOD', userId, foodList)
+  // 加载三个模块的数据 (随机排序)
+  loadData('/scenic/list', scenicList)
+  loadData('/hotel/list', hotelList)
+  loadData('/food/list', foodList)
 })
 
-// 统一调用后端推荐接口
-const loadRecommend = (type, userId, targetRef) => {
-  request.get('/recommend/list', {
-    params: { type: type, userId: userId }
-  }).then(res => {
+const loadData = (url, targetRef) => {
+  request.get(url).then(res => {
     if (res && res.length > 0) {
-      targetRef.value = res
+      // 随机排序，让每次刷新都有新鲜感
+      const shuffled = res.sort(() => 0.5 - Math.random())
+      targetRef.value = shuffled.slice(0, 4) // 只取前4个
     }
   })
 }
 
-const goDetail = (pathPrefix, id) => router.push(pathPrefix + '/' + id)
+const goDetail = (path, id) => router.push(path + '/' + id)
 const handleBannerClick = (index) => router.push('/scenic')
 const formatAddress = (addr) => addr ? (addr.length > 8 ? addr.substring(0, 8) + '...' : addr) : ''
 </script>
