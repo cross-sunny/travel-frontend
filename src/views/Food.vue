@@ -10,7 +10,8 @@
     </div>
 
     <el-row :gutter="30">
-      <el-col :span="6" v-for="item in list" :key="item.id" style="margin-bottom: 30px;">
+      <!-- 修正：遍历 list -->
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in list" :key="item.id" style="margin-bottom: 20px;">
         <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail(item.id)">
           <!-- 推荐角标 -->
           <div v-if="item.recommend === 1" class="recommend-tag">店长推荐</div>
@@ -37,15 +38,15 @@
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
+import { Search, ShoppingCart } from '@element-plus/icons-vue' // 引入图标
 
 const router = useRouter()
 const list = ref([])
 const search = ref('')
 
-// 注意：后端 Controller 路径是 /food/list
 const load = () => {
   request.get('/food/list', { params: { name: search.value } }).then(res => {
-    list.value = res
+    list.value = res || []
   })
 }
 
@@ -57,7 +58,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-/* 复用 Scenic.vue 的大部分样式，增加一些特有样式 */
 .list-container { width: 1200px; margin: 30px auto; }
 .page-header { text-align: center; margin-bottom: 40px; }
 .search-box { width: 500px; margin: 20px auto; }

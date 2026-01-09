@@ -10,19 +10,21 @@
     </div>
 
     <el-row :gutter="30">
-      <el-col :span="6" v-for="item in list" :key="item.id" style="margin-bottom: 30px;">
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in list" :key="item.id" style="margin-bottom: 30px;">
         <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail(item.id)">
-          <div class="image-wrapper">
-            <img :src="item.image" class="image">
-          </div>
+          <div class="image-wrapper"><img :src="item.image" class="image"></div>
           <div style="padding: 14px;">
             <div class="card-title">{{ item.name }}</div>
             <div class="card-tags">
-              <el-tag type="success" size="small"><el-icon><Location /></el-icon> {{ item.address }}</el-tag>
+              <!-- 修正：使用 address 字段 -->
+              <el-tag type="success" size="small" effect="plain">
+                <el-icon><Location /></el-icon> {{ formatAddr(item.address) }}
+              </el-tag>
+              <!-- 修正：写死5星展示 -->
+              <el-rate :model-value="5" disabled text-color="#ff9900" />
             </div>
             <div class="card-bottom">
-              <span class="price">¥{{ item.price }} <span style="font-size:12px; color:#999; font-weight:normal;">/晚</span></span>
-              <el-button type="primary" plain size="small">立即预定</el-button>
+              <span class="price">¥{{ item.price }} <span style="font-size:12px;color:#999;font-weight:normal">/晚</span></span>
             </div>
           </div>
         </el-card>
@@ -36,20 +38,24 @@
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
+import { Search, Location } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const list = ref([])
 const search = ref('')
 
 const load = () => {
-  // 注意 API 是 /hotel/list
   request.get('/hotel/list', { params: { name: search.value } }).then(res => {
-    list.value = res
+    list.value = res || []
   })
 }
 
-const goDetail = (id) => {
-  router.push('/hotel/' + id)
+// 修正：跳转到 hotel 详情
+const goDetail = (id) => router.push('/hotel/' + id)
+
+const formatAddr = (addr) => {
+  if(!addr) return ''
+  return addr.length > 6 ? addr.substring(0,6)+'...' : addr
 }
 
 onMounted(load)

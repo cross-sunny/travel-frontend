@@ -1,26 +1,17 @@
 <template>
   <div class="list-container">
-    <!-- 头部搜索区 -->
     <div class="page-header">
       <h2>🏞️ 探索绝美景点</h2>
       <div class="search-box">
-        <el-input
-            v-model="search"
-            placeholder="搜索景点名称..."
-            size="large"
-            class="search-input"
-            @keyup.enter="load"
-        >
-          <template #append>
-            <el-button @click="load"><el-icon><Search /></el-icon></el-button>
-          </template>
+        <el-input v-model="search" placeholder="搜索景点名称..." size="large" class="search-input" @keyup.enter="load">
+          <template #append><el-button @click="load"><el-icon><Search /></el-icon></el-button></template>
         </el-input>
       </div>
     </div>
 
-    <!-- 列表展示区 -->
     <el-row :gutter="30" style="min-height: 400px;">
-      <el-col :span="6" v-for="item in list" :key="item.id" style="margin-bottom: 30px;">
+      <!-- 修正：遍历 list -->
+      <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in list" :key="item.id" style="margin-bottom: 20px;">
         <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail(item.id)">
           <div class="image-wrapper">
             <img :src="item.image" class="image" loading="lazy">
@@ -33,14 +24,13 @@
             </div>
             <div class="card-bottom">
               <span class="price">¥{{ item.price }}</span>
-              <span class="view-btn">查看详情</span>
+              <span class="view-btn" style="font-size: 12px; color: #999;">查看详情</span>
             </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <!-- 空状态 -->
     <el-empty v-if="list.length === 0" description="暂无相关景点数据"></el-empty>
   </div>
 </template>
@@ -49,25 +39,22 @@
 import { ref, onMounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
 
 const router = useRouter()
-const list = ref([])
+const list = ref([]) // 变量名正确
 const search = ref('')
 
 const load = () => {
   request.get('/scenic/list', { params: { title: search.value } }).then(res => {
-    list.value = res
+    list.value = res || [] // 赋值正确
   })
 }
 
-const goDetail = (id) => {
-  router.push('/scenic/' + id)
-}
-
-onMounted(() => {
-  load()
-})
+const goDetail = (id) => router.push('/scenic/' + id)
+onMounted(load)
 </script>
+
 
 <style scoped>
 .list-container {

@@ -1,112 +1,81 @@
 <template>
   <div class="home-container">
-
-    <!-- 1. 3D轮播图 -->
+    <!-- 1. 轮播图 -->
     <div class="banner-box">
-      <el-carousel :interval="4000" type="card" height="450px" indicator-position="outside" arrow="always">
+      <el-carousel :interval="4000" type="card" height="450px">
         <el-carousel-item v-for="(item, index) in displayBanners" :key="index" class="custom-carousel-item">
-          <div class="carousel-card" @click="handleBannerClick(index)">
-            <div class="image-layer"><img :src="item.img" class="banner-img"></div>
-            <div class="mask-layer"></div>
-            <div class="text-content">
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.desc }}</p>
-            </div>
+          <div class="carousel-card">
+            <img :src="item.img" class="banner-img">
+            <div class="text-content"><h3>{{ item.title }}</h3><p>{{ item.desc }}</p></div>
           </div>
         </el-carousel-item>
       </el-carousel>
     </div>
 
-    <!-- 2. 热门景点 -->
+    <!-- 2. 热门景点 (独立数据 scenicList) -->
     <div class="section">
       <div class="section-header">
-        <div class="header-left">
-          <h2>🔥 热门景点推荐</h2>
-          <span class="sub-title">探索未知的自然奇观</span>
-        </div>
-        <span class="view-more" @click="$router.push('/scenic')">
-          查看更多 <el-icon><ArrowRight /></el-icon>
-        </span>
+        <h2>🔥 热门景点推荐</h2>
+        <span class="view-more" @click="$router.push('/scenic')">查看更多 <el-icon><ArrowRight /></el-icon></span>
       </div>
       <el-row :gutter="30">
-        <el-col :span="6" v-for="item in scenicList" :key="item.id" style="margin-bottom: 30px;">
-          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/scenic', item.id)">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in scenicList" :key="item.id" style="margin-bottom: 20px;">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" @click="$router.push('/scenic/' + item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.title }}</div>
-              <div class="card-info">
-                <span class="price">¥{{ item.price }}</span>
-                <span class="city"><el-icon><Location /></el-icon> {{ item.city }}</span>
-              </div>
+              <div class="card-title">{{ item.title }}</div> <!-- 景点用 title -->
+              <div class="card-info"><span class="price">¥{{ item.price }}</span><span class="city">{{ item.city }}</span></div>
             </div>
           </el-card>
         </el-col>
       </el-row>
     </div>
 
-    <!-- 3. 精选民宿 -->
+    <!-- 3. 精选民宿 (独立数据 hotelList) -->
     <div class="section" style="background-color: #f9f9f9;">
       <div class="section-header">
-        <div class="header-left">
-          <h2>🏠 精选民宿推荐</h2>
-          <span class="sub-title">像当地人一样生活</span>
-        </div>
-        <span class="view-more" @click="$router.push('/hotel')">
-          查看更多 <el-icon><ArrowRight /></el-icon>
-        </span>
+        <h2>🏠 精选民宿推荐</h2>
+        <span class="view-more" @click="$router.push('/hotel')">查看更多 <el-icon><ArrowRight /></el-icon></span>
       </div>
       <el-row :gutter="30">
-        <el-col :span="6" v-for="item in hotelList" :key="item.id" style="margin-bottom: 30px;">
-          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/hotel', item.id)">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in hotelList" :key="item.id" style="margin-bottom: 20px;">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" @click="$router.push('/hotel/' + item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.name }}</div>
-              <div class="card-info">
-                <span class="price">¥{{ item.price }} <span style="font-size: 12px; color: #999; font-weight: normal">/晚</span></span>
-                <span class="city"><el-icon><Location /></el-icon> {{ formatAddress(item.address) }}</span>
-              </div>
+              <div class="card-title">{{ item.name }}</div> <!-- 民宿用 name -->
+              <div class="card-info"><span class="price">¥{{ item.price }}</span><span class="city">{{ item.address }}</span></div>
             </div>
           </el-card>
         </el-col>
       </el-row>
     </div>
 
-    <!-- 4. 特色美食 -->
+    <!-- 4. 特色美食 (独立数据 foodList) -->
     <div class="section">
       <div class="section-header">
-        <div class="header-left">
-          <h2>🍽️ 特色美食推荐</h2>
-          <span class="sub-title">舌尖上的极致享受</span>
-        </div>
-        <span class="view-more" @click="$router.push('/food')">
-          查看更多 <el-icon><ArrowRight /></el-icon>
-        </span>
+        <h2>🍽️ 特色美食推荐</h2>
+        <span class="view-more" @click="$router.push('/food')">查看更多 <el-icon><ArrowRight /></el-icon></span>
       </div>
       <el-row :gutter="30">
-        <el-col :span="6" v-for="item in foodList" :key="item.id" style="margin-bottom: 30px;">
-          <el-card :body-style="{ padding: '0px' }" class="product-card" shadow="hover" @click="goDetail('/food', item.id)">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="item in foodList" :key="item.id" style="margin-bottom: 20px;">
+          <el-card :body-style="{ padding: '0px' }" class="product-card" @click="$router.push('/food/' + item.id)">
             <div class="image-wrapper"><img :src="item.image" class="image"></div>
             <div style="padding: 14px;">
-              <div class="card-title">{{ item.name }}</div>
-              <div class="card-info">
-                <span class="price">¥{{ item.price }}</span>
-                <span class="city" style="color: #42b983">推荐指数 ⭐⭐⭐⭐⭐</span>
-              </div>
+              <div class="card-title">{{ item.name }}</div> <!-- 美食用 name -->
+              <div class="card-info"><span class="price">¥{{ item.price }}</span></div>
             </div>
           </el-card>
         </el-col>
       </el-row>
     </div>
-
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import request from '@/utils/request'
-import { useRouter } from 'vue-router'
 import { ArrowRight, Location } from "@element-plus/icons-vue";
-
+// 静态图片
 import banner1 from '@/assets/img/banner1.jpg';
 import banner2 from '@/assets/img/banner2.jpg';
 import banner3 from '@/assets/img/banner3.jpg';
@@ -114,45 +83,35 @@ import banner4 from '@/assets/img/banner4.png';
 import banner5 from '@/assets/img/banner5.jpg';
 import banner6 from '@/assets/img/banner6.jpg';
 
-const router = useRouter()
+// 三个独立的数据源
 const scenicList = ref([])
 const hotelList = ref([])
 const foodList = ref([])
 
 const rawBanners = [
-  { img: banner1, title: '山川湖海', desc: '奔赴一场自然的约会' },
+  { img: banner1, title: '山川湖海', desc: '赴天地之约，揽自然之胜' },
   { img: banner2, title: '云漫金顶', desc: '登仙山揽胜，赴道家清欢' },
   { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
   { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
-  { img: banner5, title: '古坛遗韵', desc: '一砖一瓦皆承华夏文脉' },
-  { img: banner6, title: '烟雨古镇', desc: '踏青石板，赴一场江南梦' }
+  { img: banner5, title: '古坛风韵', desc: '一砖一瓦皆承华夏文脉' },
+  { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' }
 ]
-
-const displayBanners = computed(() => {
-  if (rawBanners.length < 3) return [...rawBanners, ...rawBanners, ...rawBanners].slice(0, 6)
-  return rawBanners
-})
+const displayBanners = computed(() => rawBanners)
 
 onMounted(() => {
-  // 加载三个模块的数据 (随机排序)
-  loadData('/scenic/list', scenicList)
-  loadData('/hotel/list', hotelList)
-  loadData('/food/list', foodList)
-})
-
-const loadData = (url, targetRef) => {
-  request.get(url).then(res => {
-    if (res && res.length > 0) {
-      // 随机排序，让每次刷新都有新鲜感
-      const shuffled = res.sort(() => 0.5 - Math.random())
-      targetRef.value = shuffled.slice(0, 4) // 只取前4个
-    }
+  // 1. 查景点 (取前4个)
+  request.get('/scenic/list').then(res => {
+    if(res) scenicList.value = res.slice(0, 4)
   })
-}
-
-const goDetail = (path, id) => router.push(path + '/' + id)
-const handleBannerClick = (index) => router.push('/scenic')
-const formatAddress = (addr) => addr ? (addr.length > 8 ? addr.substring(0, 8) + '...' : addr) : ''
+  // 2. 查民宿
+  request.get('/hotel/list').then(res => {
+    if(res) hotelList.value = res.slice(0, 4)
+  })
+  // 3. 查美食
+  request.get('/food/list').then(res => {
+    if(res) foodList.value = res.slice(0, 4)
+  })
+})
 </script>
 
 <style scoped>

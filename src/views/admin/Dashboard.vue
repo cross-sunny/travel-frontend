@@ -77,9 +77,9 @@
             </div>
           </template>
           <div style="font-size: 14px; color: #666; line-height: 2;">
-            <p><el-tag size="small">通知</el-tag> 数据库备份已完成</p>
-            <p><el-tag size="small" type="warning">维护</el-tag> 下周三凌晨服务器维护</p>
-            <p><el-tag size="small" type="danger">告警</el-tag> 暂无异常访问</p>
+            <p><el-tag size="small">通知</el-tag> 所有代码备份已完成</p>
+            <p><el-tag size="small" type="warning">维护</el-tag> 每周三凌晨服务器维护</p>
+            <p><el-tag size="small" type="danger">警告</el-tag> 暂无异常访问</p>
             <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; text-align: center;">
               <img src="https://images.pexels.com/photos/7054516/pexels-photo-7054516.jpeg" style="width: 100%; border-radius: 8px; opacity: 0.8;">
               <p style="font-size: 12px; color: #999;">系统运行平稳</p>
