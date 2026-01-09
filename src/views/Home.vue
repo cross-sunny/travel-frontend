@@ -2,7 +2,7 @@
   <div class="home-container">
     <!-- 1. 轮播图 -->
     <div class="banner-box">
-      <el-carousel :interval="4000" type="card" height="450px">
+      <el-carousel :interval="2500" type="card" height="450px">
         <el-carousel-item v-for="(item, index) in displayBanners" :key="index" class="custom-carousel-item">
           <div class="carousel-card">
             <img :src="item.img" class="banner-img">
@@ -74,7 +74,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import request from '@/utils/request'
+import { useRouter } from 'vue-router'
 import { ArrowRight, Location } from "@element-plus/icons-vue";
+
 // 静态图片
 import banner1 from '@/assets/img/banner1.jpg';
 import banner2 from '@/assets/img/banner2.jpg';
@@ -83,35 +85,48 @@ import banner4 from '@/assets/img/banner4.png';
 import banner5 from '@/assets/img/banner5.jpg';
 import banner6 from '@/assets/img/banner6.jpg';
 
+const router = useRouter()
 // 三个独立的数据源
 const scenicList = ref([])
 const hotelList = ref([])
 const foodList = ref([])
 
 const rawBanners = [
-  { img: banner1, title: '山川湖海', desc: '赴天地之约，揽自然之胜' },
+  { img: banner1, title: '山川湖海', desc: '赴天地之约，揽自然之观' },
   { img: banner2, title: '云漫金顶', desc: '登仙山揽胜，赴道家清欢' },
   { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
   { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
-  { img: banner5, title: '古坛风韵', desc: '一砖一瓦皆承华夏文脉' },
+  { img: banner5, title: '古坛风韵', desc: '一砖一瓦，皆承华夏文脉' },
   { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' }
 ]
 const displayBanners = computed(() => rawBanners)
 
+// === 核心逻辑修改区 ===
 onMounted(() => {
-  // 1. 查景点 (取前4个)
+  // 1. 查景点 (随机取4个)
   request.get('/scenic/list').then(res => {
-    if(res) scenicList.value = res.slice(0, 4)
+    if(res && res.length > 0) {
+      // sort(() => 0.5 - Math.random()) 是最简单的数组乱序方法
+      scenicList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    }
   })
-  // 2. 查民宿
+
+  // 2. 查民宿 (随机取4个)
   request.get('/hotel/list').then(res => {
-    if(res) hotelList.value = res.slice(0, 4)
+    if(res && res.length > 0) {
+      hotelList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    }
   })
-  // 3. 查美食
+
+  // 3. 查美食 (随机取4个)
   request.get('/food/list').then(res => {
-    if(res) foodList.value = res.slice(0, 4)
+    if(res && res.length > 0) {
+      foodList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    }
   })
 })
+
+const goDetail = (path, id) => router.push(path + '/' + id)
 </script>
 
 <style scoped>

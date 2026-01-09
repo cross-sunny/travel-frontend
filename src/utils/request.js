@@ -26,7 +26,7 @@ request.interceptors.response.use(response => {
     if (typeof res === 'string') {
         res = res ? JSON.parse(res) : res
     }
-    // 统一处理错误 (假设后端 code 200 是成功)
+    // 统一处理错误
     if (res.code !== '200') {
         ElMessage.error(res.msg || '网络异常')
         return Promise.reject(res.msg)
