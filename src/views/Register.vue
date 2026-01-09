@@ -102,6 +102,8 @@ import { ref, reactive, onUnmounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+// 确保这些图标引入了，否则 HTML 会报错
+import { User, Lock, Message, Key, Avatar } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const formRef = ref(null)
@@ -140,7 +142,8 @@ const handleSendCode = () => {
   formRef.value.validateField('email', (valid) => {
     if (!valid) return
     emailLoading.value = true
-    request.post('/user/send-code', null, { params: { email: form.email } })
+    // type: 'register' 是关键！
+    request.post('/user/send-code', null, { params: { email: form.email, type: 'register' } })
         .then(() => {
           ElMessage.success(`验证码已发送至 ${form.email}`)
           time.value = 60

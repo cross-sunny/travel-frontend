@@ -120,7 +120,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import request from '@/utils/request'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -132,12 +132,39 @@ const isResetMode = ref(false)
 const remember = ref(false)
 
 const form = reactive({ username: '', password: '' })
+
+// === 1. 页面加载：自动填充记住的密码 ===
+onMounted(() => {
+  const savedInfo = localStorage.getItem('login_remember')
+  if (savedInfo) {
+    try {
+      // 简单解密并填充
+      const decrypted = JSON.parse(atob(savedInfo))
+      form.username = decrypted.u
+      form.password = decrypted.p
+      remember.value = true
+    } catch (e) {
+      localStorage.removeItem('login_remember')
+    }
+  }
+})
+
+// === 2. 登录逻辑：处理记住密码 ===
 const handleLogin = async () => {
   if (!form.username || !form.password) return ElMessage.warning('请输入账号和密码')
   loading.value = true
   try {
     const res = await request.post('/user/login', form)
     ElMessage.success('登录成功')
+
+    // 如果勾选了记住密码，保存到本地
+    if (remember.value) {
+      const info = btoa(JSON.stringify({ u: form.username, p: form.password }))
+      localStorage.setItem('login_remember', info)
+    } else {
+      localStorage.removeItem('login_remember')
+    }
+
     localStorage.setItem('user', JSON.stringify(res))
     router.push(res.role === 'ADMIN' ? '/admin/user' : '/')
   } catch (err) { console.error(err) } finally { loading.value = false }
@@ -154,10 +181,12 @@ const resetRules = {
   newPassword: [{ required: true, message: '必填', trigger: 'blur' }]
 }
 
+// === 3. 发送验证码：标记为重置模式 ===
 const sendCode = () => {
   resetFormRef.value.validateField('email', (valid) => {
     if (valid) {
-      request.post('/user/send-code', null, { params: { email: resetForm.email } }).then(() => {
+      // type: 'reset' 是关键！
+      request.post('/user/send-code', null, { params: { email: resetForm.email, type: 'reset' } }).then(() => {
         ElMessage.success('验证码已发送')
         time.value = 60
         timer.value = setInterval(() => { time.value--; if(time.value <= 0) clearInterval(timer.value) }, 1000)
@@ -171,8 +200,10 @@ const handleReset = () => {
     if (valid) {
       loading.value = true
       request.post('/user/reset-password', resetForm).then(() => {
-        ElMessage.success('重置成功，请登录')
+        ElMessage.success('重置成功，请使用新密码登录')
         isResetMode.value = false
+        // 自动填入新密码
+        form.password = ''
       }).finally(() => loading.value = false)
     }
   })
