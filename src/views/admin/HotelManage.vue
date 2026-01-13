@@ -33,18 +33,15 @@
         <template #default="scope">
           <el-popover placement="right" :width="320" trigger="hover">
             <template #reference>
-              <!-- 列表显示小缩略图 -->
               <el-image
                   :src="scope.row.image"
                   style="width: 80px; height: 60px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"
                   fit="cover"
               />
             </template>
-            <!-- 悬浮弹窗内容 -->
             <div style="text-align: center;">
               <img :src="scope.row.image" style="width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 200px; object-fit: cover;">
               <h3 style="margin: 5px 0; color: #333;">{{ scope.row.name }}</h3>
-              <!-- 民宿特有的地址图标 -->
               <div style="text-align: center; color: #409EFF; font-size: 13px; margin-bottom: 8px;">
                 <el-icon><Location /></el-icon> {{ scope.row.address }}
               </div>
@@ -52,7 +49,9 @@
                 {{ scope.row.description || '暂无简介' }}
               </div>
               <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <el-tag type="warning">推荐: 5星</el-tag>
+                <el-tag :type="scope.row.recommend === 1 ? 'danger' : 'info'">
+                  {{ scope.row.recommend === 1 ? '严选民宿' : '普通民宿' }}
+                </el-tag>
                 <span style="color: #f56c6c; font-weight: bold; font-size: 16px;">¥{{ scope.row.price }} /晚</span>
               </div>
             </div>
@@ -72,10 +71,18 @@
         <template #default="scope">¥{{ scope.row.price }}</template>
       </el-table-column>
 
-      <!-- 这里的 star 字段民宿表其实没有，为了不报错，可以删掉或者写死 -->
-      <el-table-column label="推荐指数" width="160">
-        <template #default>
-          <el-rate :model-value="5" disabled text-color="#ff9900" />
+      <!-- 推荐开关：倒数第二列 -->
+      <el-table-column label="是否推荐" width="120" align="center">
+        <template #default="scope">
+          <el-switch
+              v-model="scope.row.recommend"
+              :active-value="1"
+              :inactive-value="0"
+              active-text="推荐"
+              inactive-text="普通"
+              inline-prompt
+              @change="handleRecommendChange(scope.row)"
+          />
         </template>
       </el-table-column>
 
@@ -102,7 +109,6 @@
     </div>
 
     <!-- 编辑/新增弹窗 -->
-    <!-- 修正：:name 改为 :title -->
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑民宿' : '新增民宿'" width="500px">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称">
@@ -119,6 +125,10 @@
           <el-input v-model="form.price" type="number" placeholder="请输入每晚价格">
             <template #prepend>¥</template>
           </el-input>
+        </el-form-item>
+
+        <el-form-item label="推荐">
+          <el-switch v-model="form.recommend" :active-value="1" :inactive-value="0" />
         </el-form-item>
 
         <el-form-item label="封面URL">
@@ -141,22 +151,19 @@
 import { ref, reactive, onMounted } from 'vue'
 import request from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Location } from '@element-plus/icons-vue' // 引入图标
+import { Location } from '@element-plus/icons-vue'
 
 const loading = ref(false)
 const tableData = ref([])
 const search = ref('')
 const dialogVisible = ref(false)
 
-// 分页数据
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-// 民宿表单对象：包含 address，没有 star 和 city
-const form = reactive({ id: null, name: '', address: '', price: '', image: '', description: '' })
+const form = reactive({ id: null, name: '', address: '', price: '', image: '', description: '', recommend: 0 })
 
-// 加载数据 (核心：调用 /page 接口)
 const load = () => {
   loading.value = true
   request.get('/hotel/page', {
@@ -173,8 +180,17 @@ const load = () => {
   })
 }
 
+// 核心：处理推荐切换
+const handleRecommendChange = (row) => {
+  request.post('/hotel/update', row).then(() => {
+    ElMessage.success('状态更新成功')
+  }).catch(() => {
+    row.recommend = row.recommend === 1 ? 0 : 1
+  })
+}
+
 const openAdd = () => {
-  Object.assign(form, { id: null, name: '', address: '', price: '', image: '', description: '' })
+  Object.assign(form, { id: null, name: '', address: '', price: '', image: '', description: '', recommend: 0 })
   dialogVisible.value = true
 }
 

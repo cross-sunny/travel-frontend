@@ -29,16 +29,30 @@
               <el-input v-model="userInfo.username" disabled />
             </el-form-item>
             <el-form-item label="昵称">
-              <el-input v-model="editForm.nickname" />
+              <!-- 增加 @blur 事件，失去焦点时触发保存 -->
+              <el-input
+                  v-model="editForm.nickname"
+                  @blur="handleNicknameBlur"
+                  placeholder="点击修改，失焦自动保存"
+              />
             </el-form-item>
             <el-form-item label="邮箱">
               <el-input v-model="editForm.email" disabled placeholder="不支持修改" />
             </el-form-item>
           </el-form>
 
-          <!-- 4. 按钮组 (宽度与表单统一) -->
+          <!-- 4. 按钮组 -->
           <div class="button-group">
-            <el-button type="primary" class="action-btn" @click="updateInfo">保存修改</el-button>
+            <!-- 修改点：替换原来的保存按钮 -->
+            <el-button
+                color="#87CEEB"
+                style="color: white; width: 100% !important; height: 40px; border-radius: 20px; margin-left: 0 !important;"
+                @click="$router.push('/ai-recommend')"
+            >
+              <el-icon style="margin-right: 5px;"><MagicStick /></el-icon>
+              AI 智能推荐
+            </el-button>
+
             <el-button type="danger" plain class="action-btn" @click="deleteAccount">注销账号</el-button>
           </div>
         </el-card>
@@ -125,7 +139,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import request from '@/utils/request'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { Upload, Loading } from '@element-plus/icons-vue'
+import {Upload, Loading, MagicStick} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userInfo = ref({})
@@ -140,12 +154,16 @@ const isAvatarUploading = ref(false)
 const uploadRef = ref(null)
 
 // 1. 定义服务器地址
-const REMOTE_SERVER = 'http://115.175.42.16'
+const REMOTE_SERVER = 'https://zjyweb.asia'
+
+// 2. 上传地址会自动变成 https://zjyweb.asia/travel/api/file/upload
 const uploadUrl = `${REMOTE_SERVER}/travel/api/file/upload`
 
+// 3. 图片路径补全
 const getFullUrl = (url) => {
   if (!url) return 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
   if (url.startsWith('http')) return url
+  // 如果是相对路径，拼上 https 前缀
   if (url.startsWith('/files')) return `${REMOTE_SERVER}${url}`
   return url
 }
@@ -168,17 +186,24 @@ const loadOrders = () => {
     orders.value = res
   }).finally(() => loading.value = false)
 }
+// 新增失焦处理函数
+const handleNicknameBlur = () => {
+  // 如果没变，或者为空，不发请求
+  if (!editForm.nickname || editForm.nickname === userInfo.value.nickname) return
 
+  updateInfo() // 复用之前的更新函数
+}
+
+// 修改原 updateInfo 函数，去掉 reload 刷新页面的逻辑（体验更好）
 const updateInfo = () => {
   const data = {
     id: userInfo.value.id,
     nickname: editForm.nickname
   }
   request.post('/user/update', data).then(res => {
-    ElMessage.success('信息保存成功')
+    ElMessage.success('昵称已更新')
     userInfo.value = res
     localStorage.setItem('user', JSON.stringify(res))
-    setTimeout(() => location.reload(), 500)
   })
 }
 

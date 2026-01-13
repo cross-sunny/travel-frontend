@@ -22,7 +22,11 @@ const routes = [
             { path: 'food/:id', component: () => import('@/views/FoodDetail.vue') }, // 美食详情
 
             // 4. 个人中心
-            { path: 'user-center', component: () => import('@/views/UserCenter.vue') }
+            { path: 'user-center', component: () => import('@/views/UserCenter.vue') },
+
+            // 5.AI 推荐
+            { path: 'ai-recommend', component: () => import('@/views/AIRecommend.vue') },
+// ...
         ]
     },
 

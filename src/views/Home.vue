@@ -84,6 +84,7 @@ import banner3 from '@/assets/img/banner3.jpg';
 import banner4 from '@/assets/img/banner4.png';
 import banner5 from '@/assets/img/banner5.jpg';
 import banner6 from '@/assets/img/banner6.jpg';
+import banner7 from '@/assets/img/banner7.jpg';
 
 const router = useRouter()
 // 三个独立的数据源
@@ -97,31 +98,49 @@ const rawBanners = [
   { img: banner3, title: '苏堤春晓', desc: '一湖烟雨，半程诗意' },
   { img: banner4, title: '五岳独尊', desc: '会当凌绝顶，一览众山小' },
   { img: banner5, title: '古坛风韵', desc: '一砖一瓦，皆承华夏文脉' },
-  { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' }
+  { img: banner6, title: '诗雨江南', desc: '踏青石板，赴一场江南梦' },
+  { img: banner7, title: '古街深巷', desc: '千年等垕，只为钧来' }
 ]
 const displayBanners = computed(() => rawBanners)
 
 // === 核心逻辑修改区 ===
 onMounted(() => {
-  // 1. 查景点 (随机取4个)
+  // 1. 景点
   request.get('/scenic/list').then(res => {
-    if(res && res.length > 0) {
-      // sort(() => 0.5 - Math.random()) 是最简单的数组乱序方法
-      scenicList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    if (res && res.length > 0) {
+      // 核心逻辑：先过滤出推荐的，如果推荐的不够4个，就用全部数据补齐
+      let recommends = res.filter(item => item.recommend === 1)
+
+      if (recommends.length >= 4) {
+        // 如果推荐的大于4个，随机打乱取4个
+        scenicList.value = recommends.sort(() => 0.5 - Math.random()).slice(0, 4)
+      } else {
+        scenicList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+      }
     }
   })
 
-  // 2. 查民宿 (随机取4个)
+  // 2. 民宿 (逻辑同上)
   request.get('/hotel/list').then(res => {
-    if(res && res.length > 0) {
-      hotelList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    if (res && res.length > 0) {
+      let recommends = res.filter(item => item.recommend === 1)
+      if (recommends.length >= 4) {
+        hotelList.value = recommends.sort(() => 0.5 - Math.random()).slice(0, 4)
+      } else {
+        hotelList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+      }
     }
   })
 
-  // 3. 查美食 (随机取4个)
+  // 3. 美食
   request.get('/food/list').then(res => {
-    if(res && res.length > 0) {
-      foodList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+    if (res && res.length > 0) {
+      let recommends = res.filter(item => item.recommend === 1)
+      if (recommends.length >= 4) {
+        foodList.value = recommends.sort(() => 0.5 - Math.random()).slice(0, 4)
+      } else {
+        foodList.value = res.sort(() => 0.5 - Math.random()).slice(0, 4)
+      }
     }
   })
 })

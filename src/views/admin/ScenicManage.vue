@@ -48,7 +48,9 @@
                 {{ scope.row.description || '暂无简介' }}
               </div>
               <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <el-tag type="warning">推荐: {{ scope.row.star }}星</el-tag>
+                <el-tag :type="scope.row.recommend === 1 ? 'danger' : 'info'">
+                  {{ scope.row.recommend === 1 ? '热门推荐' : '普通景点' }}
+                </el-tag>
                 <span style="color: #f56c6c; font-weight: bold; font-size: 16px;">¥{{ scope.row.price }}</span>
               </div>
             </div>
@@ -68,9 +70,18 @@
         <template #default="scope">¥{{ scope.row.price }}</template>
       </el-table-column>
 
-      <el-table-column prop="star" label="星级" width="160">
+      <!-- 推荐开关：倒数第二列 -->
+      <el-table-column label="是否推荐" width="120" align="center">
         <template #default="scope">
-          <el-rate v-model="scope.row.star" disabled text-color="#ff9900" />
+          <el-switch
+              v-model="scope.row.recommend"
+              :active-value="1"
+              :inactive-value="0"
+              active-text="推荐"
+              inactive-text="普通"
+              inline-prompt
+              @change="handleRecommendChange(scope.row)"
+          />
         </template>
       </el-table-column>
 
@@ -102,7 +113,10 @@
         <el-form-item label="名称"><el-input v-model="form.title" /></el-form-item>
         <el-form-item label="城市"><el-input v-model="form.city" /></el-form-item>
         <el-form-item label="价格"><el-input v-model="form.price" type="number" /></el-form-item>
-        <el-form-item label="星级"><el-rate v-model="form.star" /></el-form-item>
+        <!-- 弹窗里也加上推荐开关 -->
+        <el-form-item label="推荐">
+          <el-switch v-model="form.recommend" :active-value="1" :inactive-value="0" />
+        </el-form-item>
         <el-form-item label="封面URL"><el-input v-model="form.image" type="textarea" :rows="2" placeholder="输入图片链接" /></el-form-item>
         <el-form-item label="简介"><el-input v-model="form.description" type="textarea" :rows="4" /></el-form-item>
       </el-form>
@@ -124,14 +138,13 @@ const tableData = ref([])
 const search = ref('')
 const dialogVisible = ref(false)
 
-// 分页数据
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-const form = reactive({ id: null, title: '', city: '', price: '', star: 5, image: '', description: '' })
+// 包含 recommend 字段
+const form = reactive({ id: null, title: '', city: '', price: '', image: '', description: '', recommend: 0 })
 
-// 加载数据 (核心：调用 /page 接口)
 const load = () => {
   loading.value = true
   request.get('/scenic/page', {
@@ -141,7 +154,6 @@ const load = () => {
       size: pageSize.value
     }
   }).then(res => {
-    // 后端返回 Page 对象: { records: [...], total: 100, ... }
     tableData.value = res.records
     total.value = res.total
   }).finally(() => {
@@ -149,8 +161,18 @@ const load = () => {
   })
 }
 
+// 核心：处理推荐切换
+const handleRecommendChange = (row) => {
+  request.post('/scenic/update', row).then(() => {
+    ElMessage.success('状态更新成功')
+  }).catch(() => {
+    // 失败回滚
+    row.recommend = row.recommend === 1 ? 0 : 1
+  })
+}
+
 const openAdd = () => {
-  Object.assign(form, { id: null, title: '', city: '', price: '', star: 5, image: '', description: '' })
+  Object.assign(form, { id: null, title: '', city: '', price: '', image: '', description: '', recommend: 0 })
   dialogVisible.value = true
 }
 
@@ -164,7 +186,7 @@ const save = () => {
   request.post(url, form).then(() => {
     ElMessage.success('保存成功')
     dialogVisible.value = false
-    load() // 刷新列表
+    load()
   })
 }
 
